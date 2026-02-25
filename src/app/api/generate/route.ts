@@ -100,7 +100,7 @@ export async function POST(req: Request) {
   const json = await req.json();
   const input = bodySchema.parse(json);
 
-  const systemPrompt = `당신은 동화 작가입니다. 쉬운 한국어로 따뜻하고 포근한 분위기의 짧은 동화를 써주세요. 잔인함이나 무서운 요소는 피하고, 마지막에 교훈이 자연스럽게 드러나야 합니다. 문단은 비어 보이지 않도록 각 문단을 2-4문장으로 구성하고 너무 짧은 문단은 피하세요.`;
+  const systemPrompt = `당신은 그림책 작가입니다. 쉬운 한국어로 따뜻하고 포근한 분위기의 짧은 그림책 이야기를 써주세요. 잔인함이나 무서운 요소는 피하고, 마지막에 교훈이 자연스럽게 드러나야 합니다. 문단은 비어 보이지 않도록 각 문단을 2-4문장으로 구성하고 너무 짧은 문단은 피하세요.`;
   const userPrompt = `주인공: ${input.heroName}\n친구: ${input.friendName}\n배경: ${input.setting}\n교훈: ${input.moral}\n형식: 제목 포함, 3~4문단, 한국어. 각 문단은 2-4문장, 문단 사이에는 빈 줄. 대사 1-2줄 포함.`;
 
   const encoder = new TextEncoder();

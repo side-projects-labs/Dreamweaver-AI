@@ -1,5 +1,11 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  createShareId,
+  getLastSharedId,
+  saveSharedStory,
+  type SharedStoryBook,
+} from "@/lib/storyShare";
 
 type GenerateResponse = {
   story: string;
@@ -42,6 +48,8 @@ export default function Home() {
     null
   );
   const [imageLoading, setImageLoading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isStoryRendering, setIsStoryRendering] = useState(false);
   const [generationId, setGenerationId] = useState(0);
   const lastStoryCountRef = useRef(0);
   const pendingStoryRef = useRef<string[]>([]);
@@ -52,10 +60,12 @@ export default function Home() {
       window.clearInterval(storyTimerRef.current);
       storyTimerRef.current = null;
     }
+    setIsStoryRendering(false);
   };
 
   const startStoryTimer = () => {
     if (storyTimerRef.current !== null) return;
+    setIsStoryRendering(true);
     storyTimerRef.current = window.setInterval(() => {
       const queue = pendingStoryRef.current;
       if (queue.length === 0) {
@@ -87,6 +97,7 @@ export default function Home() {
     setResult(null);
     setGenerationId((prev) => prev + 1);
     setImageLoading(false);
+    setIsStoryRendering(false);
     pendingStoryRef.current = [];
     stopStoryTimer();
     try {
@@ -195,6 +206,42 @@ export default function Home() {
     }
   }
 
+  async function handleShare() {
+    if (!result?.story) return;
+    setIsSharing(true);
+    try {
+      const payload: SharedStoryBook = {
+        heroName,
+        friendName,
+        setting,
+        moral,
+        style,
+        withImage,
+        result,
+        createdAt: new Date().toISOString(),
+      };
+      const id = await createShareId(payload);
+      await saveSharedStory(id, payload);
+      const shareUrl = `${window.location.origin}/share?id=${id}`;
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e.message || "공유 링크 생성 중 오류가 발생했습니다.");
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  function openLastSharedBook() {
+    const lastId = getLastSharedId();
+    if (!lastId) {
+      setError("저장된 그림책이 없습니다.");
+      return;
+    }
+    const shareUrl = `${window.location.origin}/share?id=${lastId}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+  }
+
   const storyPages = useMemo(() => {
     if (!result?.story) return [];
     const paragraphs = result.story
@@ -211,7 +258,7 @@ export default function Home() {
       titleCandidate.length > 0 && titleCandidate.length <= 40;
     const body = isTitleOnly ? paragraphs.slice(1) : paragraphs;
     if (body.length === 0) return [];
-    const minCharsPerPage = 250;
+    const minCharsPerPage = 200;
     const pages: string[] = [];
     let buffer = "";
     for (const paragraph of body) {
@@ -248,6 +295,7 @@ export default function Home() {
     setFlipDirection(null);
     lastStoryCountRef.current = 0;
     setImageLoading(false);
+    setIsStoryRendering(false);
   }, [generationId]);
 
   useEffect(() => {
@@ -259,7 +307,7 @@ export default function Home() {
     return [
       {
         type: "cover",
-        title: storyTitle || "나만의 동화책",
+        title: storyTitle || "나만의 그림책",
         subtitle: `${heroName} · ${friendName}`,
         setting,
       },
@@ -314,7 +362,7 @@ export default function Home() {
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl sm:text-3xl font-semibold">
-          나만의 동화책 작가
+          나만의 그림책 작가
         </h1>
         {!showForm && (
           <button
@@ -396,17 +444,36 @@ export default function Home() {
             disabled={isLoading}
             className="w-full bg-black text-white rounded px-4 py-2 disabled:opacity-60"
           >
-            {isLoading ? "AI 작가님이 열심히 쓰는 중..." : "동화 만들기!"}
+            그림책 만들기!
           </button>
-          {isLoading && (
-            <p className="text-sm text-gray-600">
-              이야기 생성 후 삽화까지 순서대로 만들고 있어요...
-            </p>
-          )}
         </form>
       )}
 
       {error && <p className="mt-4 text-red-600 text-sm">{error}</p>}
+
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          type="button"
+          className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
+          onClick={handleShare}
+          disabled={
+            !result?.story ||
+            isSharing ||
+            isLoading ||
+            imageLoading ||
+            isStoryRendering
+          }
+        >
+          {isSharing ? "공유 링크 생성 중..." : "공유하기"}
+        </button>
+        <button
+          type="button"
+          className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
+          onClick={openLastSharedBook}
+        >
+          마지막 공유 열기
+        </button>
+      </div>
 
       {result && currentPage && (
         <div className="mt-6">

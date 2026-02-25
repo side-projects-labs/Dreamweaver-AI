@@ -1,6 +1,6 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started (동화 생성 데모)
+## Getting Started (그림책 생성 데모)
 
 ### 1) 환경 변수 설정 (루트 `.env.local`)
 
@@ -23,12 +23,12 @@ ENABLE_IMAGE=true
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`을 열면 폼에 재료를 입력하고 동화를 생성할 수 있습니다.
+브라우저에서 `http://localhost:3000`을 열면 폼에 재료를 입력하고 그림책을 생성할 수 있습니다.
 UI에서 "삽화 생성하기" 체크박스로 이미지 생성 여부를 제어할 수 있습니다.
 
 ### 3) 주요 파일
-- `src/app/page.tsx`: 동화 재료 입력 폼과 결과 표시 UI
-- `src/app/api/generate/route.ts`: 동화와 삽화 이미지를 생성하는 API 라우트
+- `src/app/page.tsx`: 그림책 재료 입력 폼과 결과 표시 UI
+- `src/app/api/generate/route.ts`: 그림책과 삽화 이미지를 생성하는 API 라우트
 
 ## Learn More
 

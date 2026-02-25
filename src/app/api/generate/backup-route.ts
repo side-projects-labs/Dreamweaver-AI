@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sceneSummaryPrompt = `다음 동화에서 가장 핵심적인 한 장면을 1~2문장으로 간결하게 묘사해줘. 인물, 배경, 분위기를 포함하고, 한국어로 출력.\n\n동화:\n${story}`;
+    const sceneSummaryPrompt = `다음 그림책 이야기에서 가장 핵심적인 한 장면을 1~2문장으로 간결하게 묘사해줘. 인물, 배경, 분위기를 포함하고, 한국어로 출력.\n\n그림책 이야기:\n${story}`;
     const scene = await fetchGeminiText(
       textModel,
       geminiApiKey,
