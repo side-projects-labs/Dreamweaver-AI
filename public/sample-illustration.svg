@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="Sample illustration">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8f1ff" />
+      <stop offset="100%" stop-color="#f6e5d7" />
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e7e2c7" />
+      <stop offset="100%" stop-color="#d9c4a9" />
+    </linearGradient>
+    <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f8c3c8" />
+      <stop offset="35%" stop-color="#f8e2a8" />
+      <stop offset="70%" stop-color="#cbe8d6" />
+      <stop offset="100%" stop-color="#c7d9f6" />
+    </linearGradient>
+  </defs>
+  <rect width="960" height="720" rx="36" fill="url(#sky)" />
+  <rect y="420" width="960" height="300" fill="url(#ground)" />
+  <rect x="26" y="26" width="908" height="668" rx="30" fill="none" stroke="#e7d7c6" stroke-width="10" />
+  <g opacity="0.85">
+    <circle cx="140" cy="120" r="54" fill="#fff3d4" />
+    <circle cx="200" cy="120" r="40" fill="#fff7e2" />
+    <circle cx="176" cy="96" r="34" fill="#fffdf4" />
+  </g>
+  <g opacity="0.85">
+    <circle cx="760" cy="140" r="46" fill="#ffe3e6" />
+    <circle cx="808" cy="140" r="34" fill="#fff0f2" />
+    <circle cx="786" cy="118" r="28" fill="#fff8fb" />
+  </g>
+  <path d="M180 240 C260 160, 360 160, 440 240" fill="none" stroke="url(#rainbow)" stroke-width="26" stroke-linecap="round" />
+  <path d="M190 248 C260 180, 360 180, 430 248" fill="none" stroke="url(#rainbow)" stroke-width="18" stroke-linecap="round" opacity="0.8" />
+  <path d="M0 470 C140 420, 260 520, 420 470 C520 440, 640 520, 760 470 C860 440, 920 500, 960 520 L960 720 L0 720 Z" fill="#e6d2b8" />
+  <g opacity="0.9">
+    <circle cx="320" cy="430" r="48" fill="#c8b29a" />
+    <circle cx="360" cy="420" r="38" fill="#d2bfa8" />
+    <circle cx="400" cy="438" r="30" fill="#bfa68d" />
+  </g>
+  <g opacity="0.9">
+    <rect x="560" y="360" width="90" height="120" rx="18" fill="#d8c1a8" />
+    <circle cx="585" cy="350" r="28" fill="#d8c1a8" />
+    <circle cx="625" cy="350" r="28" fill="#d8c1a8" />
+    <circle cx="585" cy="350" r="18" fill="#f5e8d7" />
+    <circle cx="625" cy="350" r="18" fill="#f5e8d7" />
+  </g>
+  <g>
+    <circle cx="240" cy="500" r="36" fill="#f0dfc9" />
+    <rect x="210" y="520" width="60" height="70" rx="16" fill="#f0dfc9" />
+    <circle cx="230" cy="500" r="8" fill="#8b6f55" />
+    <circle cx="250" cy="500" r="8" fill="#8b6f55" />
+    <path d="M218 548 C230 536, 250 536, 262 548" stroke="#c07d6a" stroke-width="6" stroke-linecap="round" />
+  </g>
+  <g>
+    <circle cx="700" cy="520" r="34" fill="#f7e7d1" />
+    <rect x="675" y="538" width="50" height="60" rx="14" fill="#f7e7d1" />
+    <circle cx="690" cy="520" r="7" fill="#8b6f55" />
+    <circle cx="710" cy="520" r="7" fill="#8b6f55" />
+    <path d="M686 546 C694 552, 706 552, 714 546" stroke="#c07d6a" stroke-width="5" stroke-linecap="round" />
+  </g>
+  <g>
+    <rect x="94" y="380" width="34" height="90" rx="12" fill="#c7a78b" />
+    <circle cx="111" cy="360" r="36" fill="#cfe4c6" />
+    <circle cx="80" cy="368" r="26" fill="#d7edd2" />
+  </g>
+  <g>
+    <rect x="820" y="390" width="30" height="80" rx="10" fill="#c7a78b" />
+    <circle cx="835" cy="370" r="32" fill="#cfe4c6" />
+    <circle cx="862" cy="378" r="24" fill="#d7edd2" />
+  </g>
+  <g opacity="0.75">
+    <circle cx="120" cy="620" r="10" fill="#ffd6df" />
+    <circle cx="150" cy="610" r="8" fill="#fff0b8" />
+    <circle cx="180" cy="630" r="9" fill="#cdebd6" />
+    <circle cx="780" cy="620" r="10" fill="#ffd6df" />
+    <circle cx="810" cy="610" r="8" fill="#fff0b8" />
+    <circle cx="840" cy="630" r="9" fill="#cdebd6" />
+  </g>
+  <text x="480" y="650" text-anchor="middle" fill="#8b6f55" font-family="serif" font-size="28">
+    Sample Storybook Illustration
+  </text>
+</svg>

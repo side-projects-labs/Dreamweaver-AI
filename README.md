@@ -5,14 +5,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ### 1) 환경 변수 설정 (루트 `.env.local`)
 
 ```
-# 텍스트 LLM 제공자: groq 고정
-GROQ_API_KEY=YOUR_GROQ_KEY
-GROQ_MODEL=llama-3.3-70b-versatile
-
-# 이미지 제공자: hf 고정
-IMAGE_PROVIDER=hf
-HF_API_TOKEN=YOUR_HF_TOKEN
-HF_IMAGE_MODEL=stabilityai/stable-diffusion-2
+# 텍스트/이미지 제공자: Gemini
+GEMINI_API_KEY=YOUR_GEMINI_KEY
+GEMINI_TEXT_MODEL=gemini-2.5-flash
+# 이미지 생성 모델 (예: gemini-2.0-flash-exp-image-generation)
+GEMINI_IMAGE_MODEL=gemini-2.0-flash-exp-image-generation
+# 이미지 요청 타임아웃(ms)
+IMAGE_TIMEOUT_MS=120000
 
 # 전역 이미지 온오프
 ENABLE_IMAGE=true
