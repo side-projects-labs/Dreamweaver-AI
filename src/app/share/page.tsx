@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   getLastSharedId,
   getSharedStory,
@@ -26,7 +26,7 @@ type BookPage =
       text: string;
     };
 
-export default function SharePage() {
+function SharePageContent() {
   const searchParams = useSearchParams();
   const [shared, setShared] = useState<SharedStoryBook | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -353,5 +353,15 @@ export default function SharePage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <Suspense
+      fallback={<div className="min-h-screen p-6 sm:p-10">불러오는 중...</div>}
+    >
+      <SharePageContent />
+    </Suspense>
   );
 }
