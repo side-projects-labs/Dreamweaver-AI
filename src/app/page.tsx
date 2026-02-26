@@ -401,18 +401,20 @@ export default function Home() {
     if (isFlipping || pageIndex >= maxPageIndex) return;
     setIsFlipping(true);
     setFlipDirection("next");
+    const flipDelayMs = 200;
     window.setTimeout(() => {
       setPageIndex((prev) => Math.min(maxPageIndex, prev + 1));
-    }, 1300);
+    }, flipDelayMs);
   };
 
   const handlePrev = () => {
     if (isFlipping || pageIndex <= 0) return;
     setIsFlipping(true);
     setFlipDirection("prev");
+    const flipDelayMs = 200;
     window.setTimeout(() => {
       setPageIndex((prev) => Math.max(0, prev - 1));
-    }, 1300);
+    }, flipDelayMs);
   };
 
   return (
@@ -426,7 +428,7 @@ export default function Home() {
           {!showForm && (
             <button
               type="button"
-            className="text-sm border rounded px-3 py-1.5 btn-theme cursor-pointer"
+              className="text-sm border rounded px-3 py-1.5 btn-theme cursor-pointer"
               onClick={() => {
                 setShowForm(true);
                 setResult(null);

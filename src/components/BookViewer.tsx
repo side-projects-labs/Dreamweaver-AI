@@ -55,13 +55,11 @@ export default function BookViewer({
 }: BookViewerProps) {
   if (!currentPage) return null;
 
-  const isCover = currentPage.type === "cover";
-  const bookShellClass = `rounded-[28px] shadow-lg border border-black overflow-hidden book-shell ${
-    isCover ? "cover-shell" : "bg-white"
-  }`;
+  const bookShellClass =
+    "rounded-[28px] shadow-lg border border-black overflow-hidden book-shell cover-shell";
   const bookShellStyle = {
-    "--flip-start": isCover ? "var(--cover-flip-start)" : "#ffffff",
-    "--flip-end": isCover ? "var(--cover-flip-end)" : "#ffffff",
+    "--flip-start": "var(--cover-flip-start)",
+    "--flip-end": "var(--cover-flip-end)",
   } as CSSProperties;
 
   return (
@@ -76,11 +74,7 @@ export default function BookViewer({
           )}
         </div>
         <div className="grid md:grid-cols-2 gap-0 min-h-[600px]">
-          <div
-            className={`relative p-6 sm:p-8 min-h-[600px] flex items-center justify-center ${
-              isCover ? "cover-left" : "bg-white"
-            }`}
-          >
+          <div className="relative p-6 sm:p-8 min-h-[600px] flex items-center justify-center cover-left">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -104,22 +98,14 @@ export default function BookViewer({
                 )}
               </div>
             )}
-            <div
-              className={`absolute right-0 top-0 h-full w-4 bg-gradient-to-l ${
-                isCover ? "cover-divider" : "from-white"
-              } to-transparent`}
-            />
+            <div className="absolute right-0 top-0 h-full w-4 bg-gradient-to-l cover-divider to-transparent" />
           </div>
-          <div
-            className={`p-6 sm:p-8 min-h-[520px] flex flex-col text-black ${
-              isCover ? "cover-right" : "bg-white"
-            }`}
-          >
+          <div className="p-6 sm:p-8 min-h-[520px] flex flex-col text-black cover-right">
             {currentPage.type === "cover" && (
               <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-                <p className="text-2xl sm:text-3xl font-semibold">
-                  {currentPage.title}
-                </p>
+                    <p className="text-2xl sm:text-3xl font-semibold">
+                      {currentPage.title}
+                    </p>
                 <p className="text-sm sm:text-base text-black/70">
                   {currentPage.subtitle}
                 </p>

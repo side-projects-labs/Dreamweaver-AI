@@ -29,11 +29,53 @@ type GroqStreamChunk = {
   }>;
 };
 
+const storyJsonSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().min(1),
+});
+
 function sanitizeKoreanText(input: string) {
   return input.replace(
     /[^\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A30-9\s.,!?'"~:;()\-\n]/g,
     ""
   );
+}
+
+function extractJson(text: string) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    return trimmed;
+  }
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  return match?.[0] ?? "";
+}
+
+function clampTitle(title: string) {
+  const stripped = title.replace(
+    /[^\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A30-9\s]/g,
+    ""
+  );
+  const sanitized = stripped.replace(/\s+/g, " ").trim();
+  return sanitized.slice(0, 10) || "이야기";
+}
+
+function clampBody(body: string) {
+  const sanitized = sanitizeKoreanText(body).trim();
+  return sanitized || "이야기가 시작됩니다.";
+}
+
+function extractJsonFields(text: string) {
+  const titleMatch = text.match(/"title"\s*:\s*"([\s\S]*?)"/);
+  const bodyMatch = text.match(/"body"\s*:\s*"([\s\S]*?)"\s*\}/);
+  if (!titleMatch || !bodyMatch) return null;
+
+  const decode = (value: string) =>
+    value.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+
+  return {
+    title: decode(titleMatch[1] ?? ""),
+    body: decode(bodyMatch[1] ?? ""),
+  };
 }
 
 async function generateOpenAIImage(
@@ -113,8 +155,11 @@ export async function POST(req: Request) {
 다른 언어(영어, 일본어, 중국어, 러시아어 등) 단어/문장을 절대 쓰지 마세요.
 깨진 문자, 의미 없는 기호, 임의의 외국어 음절을 절대 출력하지 마세요.
 허용 문자는 한글, 숫자, 공백, 줄바꿈, 기본 문장부호(.,!?'"~:;()-)만 사용하세요.
-출력은 제목 1개(10자 이내) + 본문 3~4문단으로 구성하세요.
-각 문단은 2~4문장으로 구성하고 문단 사이에는 한 줄 공백을 넣으세요.
+출력은 JSON 한 덩어리만 허용합니다. 다른 텍스트는 절대 쓰지 마세요.
+JSON 형식: {"title":"10자 이내 제목","body":"본문"}
+title은 10자 이내의 짧은 명사구로 작성하세요.
+body는 3~4문단으로 구성하고, 각 문단은 5~6문장 정도로 구성하세요.
+문단 사이에는 한 줄 공백을 넣으세요.
 문체는 쉽고 따뜻하며 어린이가 이해하기 쉬워야 합니다.
 잔인함, 공포, 폭력, 혐오 요소는 금지합니다.
 마지막 문단에서 교훈이 자연스럽게 드러나야 합니다.
@@ -128,10 +173,11 @@ export async function POST(req: Request) {
 
 출력 규칙:
 1) 한국어(한글)로만 작성
-2) 제목 1줄(10자 이내) + 본문 3~4문단
-3) 각 문단 2~4문장
-4) 문단 사이 빈 줄
-5) 대사 1~2줄 포함`;
+2) JSON만 출력
+3) title은 10자 이내
+4) body는 3~4문단, 각 문단 5~6문장 정도
+5) 문단 사이 빈 줄
+6) 대사 1~2줄 포함`;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -190,7 +236,7 @@ export async function POST(req: Request) {
         const reader = groqResponse.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        let story = "";
+        let rawStory = "";
 
         while (true) {
           const { value, done } = await reader.read();
@@ -210,11 +256,8 @@ export async function POST(req: Request) {
             try {
               const chunk = JSON.parse(data) as GroqStreamChunk;
               const rawDelta = chunk.choices?.[0]?.delta?.content ?? "";
-              const delta = sanitizeKoreanText(rawDelta);
-              if (!delta.trim()) continue;
-
-              story += delta;
-              send("story_delta", { delta });
+              if (!rawDelta) continue;
+              rawStory += rawDelta;
             } catch {
               continue;
             }
@@ -228,10 +271,8 @@ export async function POST(req: Request) {
             try {
               const chunk = JSON.parse(data) as GroqStreamChunk;
               const rawDelta = chunk.choices?.[0]?.delta?.content ?? "";
-              const delta = sanitizeKoreanText(rawDelta);
-              if (delta.trim()) {
-                story += delta;
-                send("story_delta", { delta });
+              if (rawDelta) {
+                rawStory += rawDelta;
               }
             } catch {
               // ignore trailing parse errors
@@ -239,6 +280,33 @@ export async function POST(req: Request) {
           }
         }
 
+        const jsonText = extractJson(rawStory);
+        let title = "";
+        let body = "";
+        try {
+          const parsed = storyJsonSchema.parse(JSON.parse(jsonText));
+          title = clampTitle(parsed.title);
+          body = clampBody(parsed.body);
+        } catch {
+          const extracted = extractJsonFields(rawStory);
+          if (extracted) {
+            title = clampTitle(extracted.title);
+            body = clampBody(extracted.body);
+          } else {
+            const fallbackBody = clampBody(rawStory);
+            title = clampTitle(fallbackBody.split("\n")[0] || fallbackBody);
+            body = fallbackBody;
+          }
+        }
+
+        const story = `${title}\n\n${body}`;
+        const chunkSize = 24;
+        for (let i = 0; i < story.length; i += chunkSize) {
+          const delta = story.slice(i, i + chunkSize);
+          if (delta) {
+            send("story_delta", { delta });
+          }
+        }
         send("story_done", { story });
 
         const imageEnabled = Boolean(input.withImage);
