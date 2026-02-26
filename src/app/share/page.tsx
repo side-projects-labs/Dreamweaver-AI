@@ -191,8 +191,8 @@ function SharePageContent() {
               />
             )}
           </div>
-          <div className="grid md:grid-cols-2 gap-0 min-h-[520px]">
-            <div className="relative bg-[#e6d5c0] p-6 sm:p-8 min-h-[520px] flex items-center justify-center">
+          <div className="grid md:grid-cols-2 gap-0 min-h-[600px]">
+            <div className="relative bg-[#e6d5c0] p-6 sm:p-8 min-h-[600px] flex items-center justify-center">
               {shared.result.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

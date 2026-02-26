@@ -90,13 +90,17 @@ export default function Home() {
       });
     }, 30);
   };
+
+  console.log("withImage", withImage);
+  console.log("imageLoading", imageLoading);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setResult(null);
     setGenerationId((prev) => prev + 1);
-    setImageLoading(false);
+    setImageLoading(withImage);
     setIsStoryRendering(false);
     pendingStoryRef.current = [];
     stopStoryTimer();
@@ -151,7 +155,6 @@ export default function Home() {
             imageUrl?: string | null;
             imageError?: string;
           };
-          setImageLoading(false);
           setResult((prev) => {
             const next = prev ?? { story: "", scene: "", imageUrl: null };
             return {
@@ -164,7 +167,6 @@ export default function Home() {
         }
         if (event === "error") {
           const payload = data as { message?: string };
-          setImageLoading(false);
           throw new Error(payload?.message || "알 수 없는 오류");
         }
       };
@@ -294,7 +296,7 @@ export default function Home() {
     setIsFlipping(false);
     setFlipDirection(null);
     lastStoryCountRef.current = 0;
-    setImageLoading(false);
+    setImageLoading(withImage);
     setIsStoryRendering(false);
   }, [generationId]);
 
@@ -456,13 +458,7 @@ export default function Home() {
           type="button"
           className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
           onClick={handleShare}
-          disabled={
-            !result?.story ||
-            isSharing ||
-            isLoading ||
-            imageLoading ||
-            isStoryRendering
-          }
+          disabled={!result?.story || isSharing || isStoryRendering}
         >
           {isSharing ? "공유 링크 생성 중..." : "공유하기"}
         </button>
@@ -486,15 +482,15 @@ export default function Home() {
                 />
               )}
             </div>
-            <div className="grid md:grid-cols-2 gap-0 min-h-[520px]">
-              <div className="relative bg-[#e6d5c0] p-6 sm:p-8 min-h-[520px] flex items-center justify-center">
+            <div className="grid md:grid-cols-2 gap-0 min-h-[600px]">
+              <div className="relative bg-[#e6d5c0] p-6 sm:p-8 min-h-[600px] flex items-center justify-center">
                 {result.imageUrl ? (
                   <img
                     src={result.imageUrl}
                     alt="삽화"
                     className="max-h-[420px] w-full object-contain rounded-xl shadow"
                   />
-                ) : imageLoading ? (
+                ) : withImage && (imageLoading || isLoading) ? (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
                     <img
                       src="/sample-illustration.svg"
