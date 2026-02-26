@@ -6,6 +6,8 @@ import {
   saveSharedStory,
   type SharedStoryBook,
 } from "@/lib/storyShare";
+import ThemeToggle from "@/components/ThemeToggle";
+import BookViewer, { type BookPage } from "@/components/BookViewer";
 
 type GenerateResponse = {
   story: string;
@@ -15,21 +17,14 @@ type GenerateResponse = {
   imageStatus?: number;
 };
 
-type BookPage =
-  | {
-      type: "cover";
-      title: string;
-      subtitle: string;
-      setting: string;
-    }
-  | {
-      type: "story";
-      text: string;
-    }
-  | {
-      type: "back";
-      text: string;
-    };
+type StoryInputPayload = {
+  heroName: string;
+  friendName: string;
+  setting: string;
+  moral: string;
+  style: string;
+  withImage: boolean;
+};
 
 export default function Home() {
   const [heroName, setHeroName] = useState("");
@@ -51,6 +46,8 @@ export default function Home() {
   const [isSharing, setIsSharing] = useState(false);
   const [isStoryRendering, setIsStoryRendering] = useState(false);
   const [generationId, setGenerationId] = useState(0);
+  const [isRecommendLoading, setIsRecommendLoading] = useState(false);
+  const [recommendStatus, setRecommendStatus] = useState<string | null>(null);
   const lastStoryCountRef = useRef(0);
   const pendingStoryRef = useRef<string[]>([]);
   const storyTimerRef = useRef<number | null>(null);
@@ -91,16 +88,12 @@ export default function Home() {
     }, 30);
   };
 
-  console.log("withImage", withImage);
-  console.log("imageLoading", imageLoading);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const runGeneration = async (payload: StoryInputPayload) => {
     setIsLoading(true);
     setError(null);
     setResult(null);
     setGenerationId((prev) => prev + 1);
-    setImageLoading(withImage);
+    setImageLoading(payload.withImage);
     setIsStoryRendering(false);
     pendingStoryRef.current = [];
     stopStoryTimer();
@@ -109,12 +102,12 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          heroName,
-          friendName,
-          setting,
-          moral,
-          style,
-          withImage,
+          heroName: payload.heroName,
+          friendName: payload.friendName,
+          setting: payload.setting,
+          moral: payload.moral,
+          style: payload.style,
+          withImage: payload.withImage,
         }),
       });
       if (!res.ok) {
@@ -206,7 +199,69 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await runGeneration({
+      heroName,
+      friendName,
+      setting,
+      moral,
+      style,
+      withImage,
+    });
   }
+
+  const handleRecommendAndGenerate = async () => {
+    setRecommendStatus("추천 내용을 불러오는 중...");
+    setIsRecommendLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          heroName,
+          friendName,
+          setting,
+          moral,
+          style,
+          withImage,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "추천 요청에 실패했습니다");
+      }
+      const data = (await res.json()) as StoryInputPayload;
+      const nextWithImage =
+        typeof data.withImage === "boolean" ? data.withImage : withImage;
+
+      setHeroName(data.heroName);
+      setFriendName(data.friendName);
+      setSetting(data.setting);
+      setMoral(data.moral);
+      setStyle(data.style);
+      setWithImage(nextWithImage);
+      setRecommendStatus("추천 완료. 바로 생성할게요.");
+
+      await runGeneration({
+        heroName: data.heroName,
+        friendName: data.friendName,
+        setting: data.setting,
+        moral: data.moral,
+        style: data.style,
+        withImage: nextWithImage,
+      });
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setRecommendStatus("추천에 실패했어요. 다시 시도해 주세요.");
+      setError(error.message || "알 수 없는 오류");
+    } finally {
+      setIsRecommendLoading(false);
+    }
+  };
 
   async function handleShare() {
     if (!result?.story) return;
@@ -366,19 +421,22 @@ export default function Home() {
         <h1 className="text-2xl sm:text-3xl font-semibold">
           나만의 그림책 작가
         </h1>
-        {!showForm && (
-          <button
-            type="button"
-            className="text-sm border rounded px-3 py-1.5 hover:bg-gray-50"
-            onClick={() => {
-              setShowForm(true);
-              setResult(null);
-              setError(null);
-            }}
-          >
-            새로 만들기
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {!showForm && (
+            <button
+              type="button"
+            className="text-sm border rounded px-3 py-1.5 btn-theme cursor-pointer"
+              onClick={() => {
+                setShowForm(true);
+                setResult(null);
+                setError(null);
+              }}
+            >
+              새로 만들기
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (
@@ -441,13 +499,29 @@ export default function Home() {
             />
             삽화 생성하기
           </label>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-black text-white rounded px-4 py-2 disabled:opacity-60"
-          >
-            그림책 만들기!
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleRecommendAndGenerate}
+              disabled={isLoading || isRecommendLoading}
+              aria-busy={isRecommendLoading}
+              className="w-full rounded px-4 py-2 text-sm font-medium border btn-theme cursor-pointer"
+            >
+              {isRecommendLoading
+                ? "추천 생성 중..."
+                : "AI로 내용 추천받고 바로 만들기"}
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || isRecommendLoading}
+              className="w-full rounded px-4 py-2 text-sm font-medium border btn-theme cursor-pointer"
+            >
+              {isLoading ? "그림책 만드는 중..." : "그림책 만들기!"}
+            </button>
+          </div>
+          <p className="text-xs text-black/60" role="status" aria-live="polite">
+            {recommendStatus ?? ""}
+          </p>
         </form>
       )}
 
@@ -456,7 +530,7 @@ export default function Home() {
       <div className="mb-4 flex items-center gap-2">
         <button
           type="button"
-          className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
+          className="text-sm border rounded px-3 py-1.5 btn-theme cursor-pointer"
           onClick={handleShare}
           disabled={!result?.story || isSharing || isStoryRendering}
         >
@@ -464,195 +538,32 @@ export default function Home() {
         </button>
         <button
           type="button"
-          className="text-sm border rounded px-3 py-1.5 disabled:opacity-50"
+          className="text-sm border rounded px-3 py-1.5 btn-theme cursor-pointer"
           onClick={openLastSharedBook}
         >
           마지막 공유 열기
         </button>
       </div>
 
-      {result && currentPage && (
-        <div className="mt-6">
-          <div className="rounded-[28px] bg-[#efe2d0] shadow-lg border overflow-hidden book-shell">
-            <div className="page-flip-layer">
-              {isFlipping && (
-                <div
-                  className={`page-flip ${flipDirection ?? ""}`}
-                  onAnimationEnd={() => setIsFlipping(false)}
-                />
-              )}
-            </div>
-            <div className="grid md:grid-cols-2 gap-0 min-h-[600px]">
-              <div className="relative bg-[#e6d5c0] p-6 sm:p-8 min-h-[600px] flex items-center justify-center">
-                {result.imageUrl ? (
-                  <img
-                    src={result.imageUrl}
-                    alt="삽화"
-                    className="max-h-[420px] w-full object-contain rounded-xl shadow"
-                  />
-                ) : withImage && (imageLoading || isLoading) ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center">
-                    <img
-                      src="/sample-illustration.svg"
-                      alt="삽화 미리보기"
-                      className="max-h-[360px] w-full object-contain rounded-xl shadow opacity-70 animate-pulse"
-                    />
-                    <div className="text-sm text-black/70">
-                      삽화를 그리는 중...
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-black/70 text-center">
-                    삽화가 아직 없어요.
-                    {result.imageError && (
-                      <div className="mt-2 text-xs text-black/60">
-                        {result.imageError}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="absolute right-0 top-0 h-full w-4 bg-gradient-to-l from-[#e6d7c3] to-transparent" />
-              </div>
-              <div className="bg-[#f8f1e6] p-6 sm:p-8 min-h-[520px] flex flex-col text-black">
-                {currentPage.type === "cover" && (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-                    <p className="text-2xl sm:text-3xl font-semibold">
-                      {currentPage.title}
-                    </p>
-                    <p className="text-sm sm:text-base text-black/70">
-                      {currentPage.subtitle}
-                    </p>
-                    <p className="text-sm text-black/60">
-                      {currentPage.setting}
-                    </p>
-                    <div className="mt-6 text-xs text-black/50">
-                      Dreamweaver Storybook
-                    </div>
-                  </div>
-                )}
-                {currentPage.type === "story" && (
-                  <div className="text-base sm:text-lg leading-7 whitespace-pre-wrap flex-1">
-                    {currentPage.text || "이야기를 불러오는 중입니다..."}
-                  </div>
-                )}
-                {currentPage.type === "back" && (
-                  <div className="flex-1 flex items-center justify-center text-2xl sm:text-3xl font-semibold text-black/70">
-                    {currentPage.text}
-                  </div>
-                )}
-                <div className="mt-6 flex items-center justify-between text-sm text-black/70">
-                  <button
-                    type="button"
-                    className="px-3 py-1.5 border border-black/20 rounded disabled:opacity-40"
-                    disabled={pageIndex === 0}
-                    onClick={handlePrev}
-                  >
-                    이전
-                  </button>
-                  <span>
-                    {bookPages.length > 0
-                      ? `${pageIndex + 1} / ${bookPages.length}`
-                      : "1 / 1"}
-                  </span>
-                  <button
-                    type="button"
-                    className="px-3 py-1.5 border border-black/20 rounded disabled:opacity-40"
-                    disabled={pageIndex >= maxPageIndex}
-                    onClick={handleNext}
-                  >
-                    다음
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {result && (
+        <BookViewer
+          currentPage={currentPage}
+          pageIndex={pageIndex}
+          maxPageIndex={maxPageIndex}
+          totalPages={bookPages.length}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          isFlipping={isFlipping}
+          flipDirection={flipDirection}
+          onFlipEnd={() => setIsFlipping(false)}
+          imageUrl={result.imageUrl}
+          imageError={result.imageError}
+          withImage={withImage}
+          imageLoading={imageLoading}
+          isLoading={isLoading}
+          storyPlaceholder="이야기를 불러오는 중입니다..."
+        />
       )}
-      <style jsx>{`
-        .book-shell {
-          position: relative;
-        }
-        .page-flip-layer {
-          pointer-events: none;
-          position: absolute;
-          inset: 0;
-          z-index: 5;
-        }
-        .page-flip {
-          position: absolute;
-          inset: 0;
-          perspective: 1200px;
-        }
-        .page-flip::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          height: 100%;
-          width: 50%;
-          background: linear-gradient(120deg, #f8f1e6 0%, #e6d5c0 100%);
-          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-          backface-visibility: hidden;
-          border-radius: 0 18px 18px 0;
-          filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.12));
-        }
-        .page-flip.next::before {
-          left: 50%;
-          transform-origin: left center;
-          animation: flipNext 1300ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-        }
-        .page-flip.prev::before {
-          left: 0;
-          transform-origin: right center;
-          animation: flipPrev 1300ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-        }
-        @keyframes flipNext {
-          0% {
-            transform: rotateY(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: rotateY(-180deg) rotateZ(-2deg) scale(0.98);
-            opacity: 0.2;
-          }
-        }
-        @keyframes flipPrev {
-          0% {
-            transform: rotateY(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: rotateY(180deg) rotateZ(2deg) scale(0.98);
-            opacity: 0.2;
-          }
-        }
-        .page-flip::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          height: 100%;
-          width: 50%;
-          right: 0;
-          background: linear-gradient(
-            to left,
-            rgba(0, 0, 0, 0.08),
-            rgba(255, 255, 255, 0.35),
-            rgba(255, 255, 255, 0)
-          );
-          mix-blend-mode: multiply;
-          opacity: 0;
-          border-radius: 0 18px 18px 0;
-        }
-        .page-flip.next::after {
-          right: 0;
-          opacity: 1;
-        }
-        .page-flip.prev::after {
-          left: 0;
-          right: auto;
-          opacity: 1;
-          transform: scaleX(-1);
-        }
-      `}</style>
     </div>
   );
 }
