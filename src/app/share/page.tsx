@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   getLastSharedId,
-  getSharedStory,
   getSharedStoryFromLocal,
   type SharedStoryBook,
 } from "@/lib/storyShare";
@@ -36,8 +35,9 @@ function SharePageContent() {
         setShared(null);
         return;
       }
-      const loaded = await getSharedStory(shareId);
-      if (loaded) {
+      const response = await fetch(`/api/share/${shareId}`);
+      if (response.ok) {
+        const loaded = (await response.json()) as SharedStoryBook;
         if (!mounted) return;
         setError(null);
         setShared(loaded);

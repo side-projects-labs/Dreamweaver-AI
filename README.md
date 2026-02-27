@@ -5,16 +5,23 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ### 1) 환경 변수 설정 (루트 `.env.local`)
 
 ```
-# 텍스트/이미지 제공자: Gemini
-GEMINI_API_KEY=YOUR_GEMINI_KEY
-GEMINI_TEXT_MODEL=gemini-2.5-flash
-# 이미지 생성 모델 (예: gemini-2.0-flash-exp-image-generation)
-GEMINI_IMAGE_MODEL=gemini-2.0-flash-exp-image-generation
-# 이미지 요청 타임아웃(ms)
+# 스토리 생성(Groq)
+GROQ_API_KEY=YOUR_GROQ_KEY
+# 추천 모델(선택)
+GROQ_RECOMMEND_MODEL=qwen/qwen3-32b
+
+# 이미지 생성(OpenAI)
+OPENAI_API_KEY=YOUR_OPENAI_KEY
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_SIZE=1024x1024
+# 이미지 요청 타임아웃(ms) - OPENAI_IMAGE_TIMEOUT_MS 우선
+OPENAI_IMAGE_TIMEOUT_MS=120000
 IMAGE_TIMEOUT_MS=120000
 
-# 전역 이미지 온오프
-ENABLE_IMAGE=true
+# 공유(서버)
+SUPABASE_URL=YOUR_SUPABASE_URL
+SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 ```
 
 ### 2) 개발 서버 실행

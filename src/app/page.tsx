@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createShareId,
   getLastSharedId,
-  saveSharedStory,
   type SharedStoryBook,
 } from "@/lib/storyShare";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -278,7 +277,15 @@ export default function Home() {
         createdAt: new Date().toISOString(),
       };
       const id = await createShareId(payload);
-      await saveSharedStory(id, payload);
+      const res = await fetch(`/api/share/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "공유 저장 실패");
+      }
       const shareUrl = `${window.location.origin}/share?id=${id}`;
       window.open(shareUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
