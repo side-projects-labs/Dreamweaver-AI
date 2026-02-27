@@ -139,11 +139,16 @@ export async function getSharedStory(id: string) {
   const { data, error } = await supabase
     .from("storybook_shares")
     .select(
-      "id, created_at, hero_name, friend_name, setting, moral, style, story, image_url, image_error"
+      "id, created_at, hero_name, friend_name, setting, moral, style, story, image_url, image_error, view_count"
     )
     .eq("id", id)
     .single();
   if (error || !data) return null;
+  const currentViews = typeof data.view_count === "number" ? data.view_count : 0;
+  void supabase
+    .from("storybook_shares")
+    .update({ view_count: currentViews + 1 })
+    .eq("id", id);
   return {
     heroName: data.hero_name ?? "",
     friendName: data.friend_name ?? "",
