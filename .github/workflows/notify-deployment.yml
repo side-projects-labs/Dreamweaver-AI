@@ -1,0 +1,25 @@
+name: Notify deployment
+
+# Vercel Git 연동이 GitHub 배포 상태로 보고하는 Production 배포 결과를 앱 푸시로 알린다.
+# 성공·실패만 알린다(Vercel은 완료 상태만 보고함). 취소·inactive 등은 알리지 않는다.
+on:
+  deployment_status:
+
+permissions: {}
+
+jobs:
+  notify:
+    if: >-
+      startsWith(github.event.deployment.environment, 'Production') &&
+      (github.event.deployment_status.state == 'success' ||
+       github.event.deployment_status.state == 'failure' ||
+       github.event.deployment_status.state == 'error')
+    uses: side-projects-labs/side-projects-app/.github/workflows/notify-deployment.yml@630efe53598f7ea24574b9b94210093404a91778
+    with:
+      project-id: Dreamweaver-AI
+      status: ${{ github.event.deployment_status.state == 'success' && 'succeeded' || 'failed' }}
+      detail: ${{ github.event.deployment.ref }}
+      # 실패 시 탭하면 Vercel 빌드 로그(인스펙터)가 열린다. 성공은 프로젝트 화면.
+      url: ${{ github.event.deployment_status.log_url || github.event.deployment_status.target_url }}
+      event-id: ${{ github.repository }}-deployment-${{ github.event.deployment.id }}-${{ github.event.deployment_status.state }}
+    secrets: inherit
