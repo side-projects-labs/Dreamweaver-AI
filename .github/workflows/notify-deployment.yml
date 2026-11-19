@@ -14,12 +14,10 @@ jobs:
       (github.event.deployment_status.state == 'success' ||
        github.event.deployment_status.state == 'failure' ||
        github.event.deployment_status.state == 'error')
-    uses: side-projects-labs/side-projects-app/.github/workflows/notify-deployment.yml@630efe53598f7ea24574b9b94210093404a91778
+    uses: side-projects-labs/side-projects-app/.github/workflows/notify-deployment.yml@49ad3674512fdeb24975c210fa694a6f6810cfca
     with:
       project-id: Dreamweaver-AI
       status: ${{ github.event.deployment_status.state == 'success' && 'succeeded' || 'failed' }}
       detail: ${{ github.event.deployment.ref }}
-      # 실패 시 탭하면 Vercel 빌드 로그(인스펙터)가 열린다. 성공은 프로젝트 화면.
-      url: ${{ github.event.deployment_status.log_url || github.event.deployment_status.target_url }}
       event-id: ${{ github.repository }}-deployment-${{ github.event.deployment.id }}-${{ github.event.deployment_status.state }}
     secrets: inherit
